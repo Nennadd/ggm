@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GGM</title>
+    <link rel="stylesheet" href="./src/css/main.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/js-datepicker/dist/datepicker.min.css"
+    />
+  </head>
+  <body>
+    <nav>
+      <div class="brand">
+        <a href="#"
+          ><i class="fas fa-home"></i><span>ggm</span>gastro Bestsellerliste</a
+        >
+      </div>
+      <!-- NOTE Navigation !!! -->
+      <div class="navbar">
+        <div class="search">
+          <input type="text" placeholder="Suchen" />
+          <i class="fas fa-search search-icon"></i>
+        </div>
+        <div>
+          <button>Export</button>
+        </div>
+        <div>
+          <button class="btn-white">Nach Lieferant Filtern</button>
+        </div>
+        <div>
+          <button>Nach Kategorie Filtern</button>
+        </div>
+        <div>
+          <button>Umsatz Dashboard</button>
+        </div>
+        <div>
+          <button>Dashboard Anzeigen</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- NOTE Controlls !!! -->
+    <div class="control">
+      <h2>Bestseller nach Lieferant</h2>
+      <form action="#" class="form">
+        <div class="row1">
+          <div class="form-item">
+            <label for="suppliers">Suppliers:</label>
+            <select name="suppliers" id="suppliers">
+              <option value="-1">All Suppliers</option>
+            </select>
+          </div>
+          <div class="form-item">
+            <label for="payment">Payment:</label>
+            <select name="payment" id="payment">
+              <option value="all">Paid and Unpaid</option>
+              <option value="paid">Paid</option>
+              <option value="unpaid">Unpaid</option>
+            </select>
+          </div>
+          <div class="form-item">
+            <label for="date-from">Date from:</label>
+            <input type="text" name="date-from" id="date-from" />
+          </div>
+          <div class="form-item">
+            <button class="date-from-btn">Today</button>
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="form-item">
+            <label for="item-code">Item Code:</label>
+            <input type="text" name="item-code" id="item-code" />
+          </div>
+          <div class="form-item">
+            <label for="item-name">Item Name:</label>
+            <input type="text" name="item-name" id="item-name" />
+          </div>
+          <div class="form-item">
+            <label for="date-to">Date to:</label>
+            <input type="text" name="date-to" id="date-to" />
+          </div>
+          <div class="form-item">
+            <button class="date-to-btn">Today</button>
+          </div>
+        </div>
+        <div class="form-item">
+          <button class="send">Submit</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="table">
+      <table>
+        <thead>
+          <tr>
+            <td>Item Code</td>
+            <td>Item Name</td>
+            <td>Supplier</td>
+            <td>Price</td>
+            <td>Article in Orders</td>
+            <td>Average articles by order</td>
+            <td>Warehouse</td>
+          </tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="total-price"></td>
+            <td class="sum-of-articles"></td>
+            <td></td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <script src="https://unpkg.com/js-datepicker"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+    <script type="module" src="./src/js/app.js"></script>
+  </body>
+</html>
