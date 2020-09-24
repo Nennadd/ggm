@@ -34,10 +34,10 @@ const render = (result, socket) => {
 
     getElement(".total-price").innerHTML = item.TotalPrice + " &euro;";
     getElement(".sum-of-articles").textContent = item.SumOfArticles || "";
-    getElement(".average-articles").textContent =
-      item.AvgArticleByOrder.toFixed(2) || "";
-
-    console.log(typeof item.AvgArticleByOrder);
+    if (item.AvgArticleByOrder) {
+      getElement(".average-articles").textContent =
+        item.AvgArticleByOrder.toFixed(2) || "";
+    }
 
     tr.append(tdItemCode);
     tr.append(tdItemName);
