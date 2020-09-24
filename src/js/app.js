@@ -1,18 +1,27 @@
-import { getElement, render, formatedDate } from "./functions.js";
+import { getElement, render, formatedDate, prependZero } from "./functions.js";
+
+window.addEventListener("load", () => {
+  getElement(".spinner-modal").style.display = "none";
+});
 
 // NOTE Datepicker !!!
 const options = { year: "numeric", month: "numeric", day: "numeric" };
-
 const dateFrom = datepicker("#date-from", {
   formatter: (input, date, instance) => {
     const value = date.toLocaleDateString("de-DE", options);
-    input.value = value;
+
+    // NOTE prepend zero !!!
+    const formatted = prependZero(value);
+    input.value = formatted;
   },
 });
 const dateTo = datepicker("#date-to", {
   formatter: (input, date, instance) => {
     const value = date.toLocaleDateString("de-DE", options);
-    input.value = value;
+
+    // NOTE prepend zero !!!
+    const formatted = prependZero(value);
+    input.value = formatted;
   },
 });
 
@@ -20,7 +29,6 @@ const dateTo = datepicker("#date-to", {
 let socket = new WebSocket("ws://localhost:3000");
 
 socket.addEventListener("open", () => {
-  //   socket.send("ajoj");
   console.log("We are connected !");
   Swal.fire({
     icon: "success",
@@ -36,9 +44,24 @@ socket.addEventListener("close", () => {
     timer: 2000,
   });
 });
+
+// NOTE Export .csv or render list !!!
 socket.addEventListener("message", async (data) => {
   const result = await JSON.parse(data.data);
-  render(result, socket);
+  if (result.type === "csv") {
+    try {
+      const downloadCsv = document.createElement("a");
+      downloadCsv.setAttribute("href", "backend/" + result.path);
+      downloadCsv.setAttribute("target", "_blank");
+      downloadCsv.setAttribute("download", "data.csv");
+
+      downloadCsv.click();
+    } catch (error) {
+      console.log(error.message);
+    }
+  } else {
+    render(result, socket);
+  }
 });
 
 // NOTE Form !!!
@@ -66,18 +89,32 @@ getElement("#item-name").addEventListener("keyup", (e) => {
   socket.send(JSON.stringify({ itemName: e.target.value }));
   getElement("#item-code").value = "";
 });
+// NOTE Payment !!!
+getElement("#payment").addEventListener("change", (e) => {
+  socket.send(JSON.stringify({ payment: e.target.value }));
+});
 
+// NOTE Submit form !!!
 const submitBtn = getElement(".send");
 submitBtn.addEventListener("click", (e) => {
   e.preventDefault();
 
-  const formData = {};
-  formData.supplier = getElement("#suppliers").value;
-  formData.payment = getElement("#payment").value;
+  const formData = { type: "form" };
+
   formData.dateFrom = getElement("#date-from").value;
   formData.dateTo = getElement("#date-to").value;
-  formData.tasks = getElement("#item-code").value;
-  formData.article = getElement("#item-name").value;
 
-  //   console.log(formData);
+  socket.send(JSON.stringify(formData));
+});
+
+// NOTE Export CSV !!!
+getElement(".export").addEventListener("click", () => {
+  try {
+    getElement(".spinner-modal").style.display = "flex";
+    socket.send(JSON.stringify({ type: "csv" }));
+  } catch (error) {
+    console.log(error.message);
+  } finally {
+    getElement(".spinner-modal").style.display = "none";
+  }
 });

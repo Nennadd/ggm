@@ -45,7 +45,7 @@ const render = (result, socket) => {
     tbody.append(tr);
   });
 
-  // NOTE Create Select Dropdown !!!
+  // NOTE Create Select Supplier Dropdown !!!
   suppliers.forEach((supplier) => {
     if (select[5]) select.splice(5, -1);
 
@@ -57,6 +57,9 @@ const render = (result, socket) => {
       socket.send(JSON.stringify({ supplier: e.target.value }));
     });
     select.append(option);
+  });
+  getElement(".all-suppliers").addEventListener("click", () => {
+    socket.send(JSON.stringify({ supplier: "all" }));
   });
 };
 
@@ -71,7 +74,21 @@ const formatedDate = () => {
 
   let year = date.getFullYear();
 
-  return `${day}.${month}.${year}`;
+  return `${year}-${month}-${day}`;
 };
 
-export { getElement, render, formatedDate };
+const prependZero = (value) => {
+  return value
+    .split(".")
+    .map((el) => {
+      if (el < 10) {
+        return (el = "0" + el);
+      } else {
+        return el;
+      }
+    })
+    .reverse()
+    .join("-");
+};
+
+export { getElement, render, formatedDate, prependZero };
