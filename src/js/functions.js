@@ -27,13 +27,17 @@ const render = (result, socket) => {
     tdOrders.textContent = item.ArticleInOrders || "/";
 
     const tdAverage = document.createElement("td");
-    tdAverage.textContent = item.average || "/";
+    tdAverage.textContent = "/";
 
     const tdInWarehouse = document.createElement("td");
     tdInWarehouse.textContent = item.onHand || "/";
 
     getElement(".total-price").innerHTML = item.TotalPrice + " &euro;";
     getElement(".sum-of-articles").textContent = item.SumOfArticles || "";
+    getElement(".average-articles").textContent =
+      item.AvgArticleByOrder.toFixed(2) || "";
+
+    console.log(typeof item.AvgArticleByOrder);
 
     tr.append(tdItemCode);
     tr.append(tdItemName);

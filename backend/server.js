@@ -25,11 +25,17 @@ const config = require("./config");
       return await db.query(`SELECT OITM.ItemCode, OITM.ItemName, OCRD.CardName as Supplier, RDR1.Price, 
       count(RDR1.ItemCode) as ArticleInOrders, OITM.onHand, 
       (SELECT sum(RDR1.Price) FROM RDR1) as TotalPrice, 
-      
+            
       (SELECT count(RDR1.ItemCode) FROM RDR1 JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
       JOIN OCRD on OITM.CardCode = OCRD.CardCode 
-      WHERE OCRD.CardType = 'S' ) as SumOfArticles
+      WHERE OCRD.CardType = 'S' ) as SumOfArticles,
       
+      (SELECT cast(count(RDR1.ItemCode) as float) FROM RDR1 JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
+      JOIN OCRD on OITM.CardCode = OCRD.CardCode 
+      WHERE OCRD.CardType = 'S' ) / (SELECT cast(count(DISTINCT RDR1.ItemCode) as float) FROM RDR1 JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
+      JOIN OCRD on OITM.CardCode = OCRD.CardCode 
+      WHERE OCRD.CardType = 'S') as AvgArticleByOrder
+            
       FROM OITM JOIN RDR1 on OITM.ItemCode = RDR1.ItemCode 
       JOIN OCRD on OITM.CardCode = OCRD.CardCode 
       WHERE OCRD.CardType = 'S'
@@ -48,7 +54,6 @@ const config = require("./config");
         let response = [];
 
         const data = JSON.parse(req.utf8Data);
-        console.log(data);
 
         // NOTE Expot .csv !!!
         if (data.type === "csv") {
