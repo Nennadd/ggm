@@ -124,6 +124,7 @@ submitBtn.addEventListener("click", (e) => {
       title: "Incorrect date values !",
       timer: 2000,
     });
+    return;
   }
 
   socket.send(JSON.stringify(formData));
