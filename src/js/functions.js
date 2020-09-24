@@ -81,6 +81,14 @@ const formatedDate = () => {
   return `${year}-${month}-${day}`;
 };
 
+const compareDate = (a, b) => {
+  const dateA = new Date(a);
+  const dateB = new Date(b);
+
+  if (dateB < dateA) return false;
+  return true;
+};
+
 const prependZero = (value) => {
   return value
     .split(".")
@@ -95,4 +103,4 @@ const prependZero = (value) => {
     .join("-");
 };
 
-export { getElement, render, formatedDate, prependZero };
+export { getElement, render, formatedDate, prependZero, compareDate };

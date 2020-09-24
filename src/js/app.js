@@ -1,4 +1,10 @@
-import { getElement, render, formatedDate, prependZero } from "./functions.js";
+import {
+  getElement,
+  render,
+  formatedDate,
+  prependZero,
+  compareDate,
+} from "./functions.js";
 
 window.addEventListener("load", () => {
   getElement(".spinner-modal").style.display = "none";
@@ -103,6 +109,22 @@ submitBtn.addEventListener("click", (e) => {
 
   formData.dateFrom = getElement("#date-from").value;
   formData.dateTo = getElement("#date-to").value;
+
+  if (!formData.dateFrom || !formData.dateTo) {
+    Swal.fire({
+      icon: "error",
+      title: "Date fields are required !",
+      timer: 2000,
+    });
+    return;
+  }
+  if (!compareDate(formData.dateFrom, formData.dateTo)) {
+    Swal.fire({
+      icon: "error",
+      title: "Incorrect date values !",
+      timer: 2000,
+    });
+  }
 
   socket.send(JSON.stringify(formData));
 });
