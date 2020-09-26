@@ -154,12 +154,13 @@ socket.addEventListener("message", async (data) => {
   const result = await JSON.parse(data.data);
   if (result.type === "csv") {
     try {
-      const downloadCsv = document.createElement("a");
-      downloadCsv.setAttribute("href", "./backend/" + result.path);
-      downloadCsv.setAttribute("target", "_blank");
-      downloadCsv.setAttribute("download", "data.csv");
+      //   const downloadCsv = document.createElement("a");
+      //   downloadCsv.setAttribute("href", result.path);
+      //     downloadCsv.setAttribute("target", "_blank");
+      //   downloadCsv.setAttribute("download", "data.csv");
+      //   downloadCsv.click();
 
-      downloadCsv.click();
+      download("backend" + result.path, "data.csv");
     } catch (error) {
       console.log(error.message);
     }
