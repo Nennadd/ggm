@@ -5,7 +5,10 @@ require("dotenv").config();
 const PORT = process.env.PORT || 3000;
 
 // NOTE Server !!!
-const server = http.createServer((req, res) => {});
+const server = http.createServer((req, res) => {
+  res.header("Access-Control-Allow-Origin", "*");
+});
+
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
