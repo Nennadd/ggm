@@ -160,7 +160,7 @@ socket.addEventListener("message", async (data) => {
       //   downloadCsv.setAttribute("download", "data.csv");
       //   downloadCsv.click();
 
-      download("backend" + result.path, "data.csv");
+      download(`./backend/${result.path}`, "data.csv", "text/csv");
     } catch (error) {
       console.log(error.message);
     }
