@@ -56,16 +56,17 @@ const render = (result, socket) => {
 
   // NOTE Create Select Supplier Dropdown !!!
   suppliers.forEach((supplier) => {
-    if (select[5]) select.splice(5, -1);
-
     const option = document.createElement("option");
     option.setAttribute("value", supplier);
+    option.className = "suppliers";
     option.textContent = supplier;
 
     option.addEventListener("click", (e) => {
       socket.send(JSON.stringify({ supplier: e.target.value }));
     });
-    select.append(option);
+    if (!select[5]) {
+      select.append(option);
+    }
   });
   getElement(".all-suppliers").addEventListener("click", () => {
     socket.send(JSON.stringify({ supplier: "all" }));
