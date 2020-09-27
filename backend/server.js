@@ -9,17 +9,14 @@ const server = http.createServer((req, res) => {
   res.header("Access-Control-Allow-Origin", "*");
 });
 
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
-
 // NOTE WebSocket !!!
 const socket = require("./socket")(server);
 
 // NOTE MSSQL !!!
 const db = require("mssql");
 const config = require("./config");
-(async () => {
+
+async function getData() {
   try {
     await db.connect(config);
 
@@ -212,8 +209,13 @@ const config = require("./config");
   } catch (error) {
     console.log(error.message);
   }
-})();
+}
+getData();
 
 socket.on("close", () => {
   console.log("Disconnected !!!");
+});
+
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
