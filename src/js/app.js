@@ -134,9 +134,7 @@ const dateTo = datepicker("#date-to", {
 
 (async function connect() {
   let socket = await new WebSocket("ws://localhost:3000");
-  // let intervalId;
   socket.addEventListener("open", () => {
-    // clearInterval(intervalId);
     console.log("We are connected !");
     Swal.fire({
       icon: "success",
@@ -149,12 +147,12 @@ const dateTo = datepicker("#date-to", {
     console.log("Disconnected !");
     Swal.fire({
       icon: "error",
-      title: "Disconnected !",
+      title: "Disconnected !!!",
       timer: 2000,
     });
     intervalId = setTimeout(() => {
       connect();
-    }, 10000);
+    }, 5000);
   });
 
   // NOTE Export .csv or render list !!!
@@ -162,13 +160,55 @@ const dateTo = datepicker("#date-to", {
     const result = await JSON.parse(data.data);
     if (result.type === "csv") {
       try {
-        //   const downloadCsv = document.createElement("a");
-        //   downloadCsv.setAttribute("href", result.path);
-        //     downloadCsv.setAttribute("target", "_blank");
-        //   downloadCsv.setAttribute("download", "data.csv");
-        //   downloadCsv.click();
+        function convertArrayOfObjectsToCSV(args) {
+          let result, ctr, keys, columnDelimiter, lineDelimiter, data;
 
-        download(`./backend/${result.path}`, "data.csv", "text/csv");
+          data = args.data || null;
+          if (data == null || !data.length) {
+            return null;
+          }
+
+          columnDelimiter = args.columnDelimiter || ",";
+          lineDelimiter = args.lineDelimiter || "\n";
+
+          keys = Object.keys(data[0]);
+
+          result = "";
+          result += keys.join(columnDelimiter);
+          result += lineDelimiter;
+
+          data.forEach(function (item) {
+            ctr = 0;
+            keys.forEach(function (key) {
+              if (ctr > 0) result += columnDelimiter;
+
+              result += item[key];
+              ctr++;
+            });
+            result += lineDelimiter;
+          });
+
+          return result;
+        }
+        (function downloadCSV() {
+          let data, filename, link;
+          let csv = convertArrayOfObjectsToCSV({
+            data: result.data,
+          });
+          if (csv == null) return;
+
+          filename = "data.csv";
+
+          if (!csv.match(/^data:text\/csv/i)) {
+            csv = "data:text/csv;charset=utf-8," + csv;
+          }
+          data = encodeURI(csv);
+
+          link = document.createElement("a");
+          link.setAttribute("href", data);
+          link.setAttribute("download", filename);
+          link.click();
+        })();
       } catch (error) {
         console.log(error.message);
       }
@@ -238,14 +278,12 @@ const dateTo = datepicker("#date-to", {
   });
 
   // NOTE Export CSV !!!
-  getElement(".export").addEventListener("click", () => {
+  getElement(".export").addEventListener("click", (e) => {
+    e.preventDefault();
     try {
-      getElement(".spinner-modal").style.display = "flex";
       socket.send(JSON.stringify({ type: "csv" }));
     } catch (error) {
       console.log(error.message);
-    } finally {
-      getElement(".spinner-modal").style.display = "none";
     }
   });
 })();

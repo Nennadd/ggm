@@ -107,7 +107,8 @@ nav .search .search-icon {
   border-bottom-right-radius: 10%;
   cursor: pointer;
 }
-nav button {
+nav button,
+nav .export {
   background-color: crimson;
   color: #fff;
   border: none;
@@ -117,6 +118,10 @@ nav button {
   border-radius: 5%;
   font-size: 0.75rem;
   cursor: pointer;
+}
+nav .export {
+  display: block;
+  padding: 0.4rem;
 }
 nav .btn-white {
   background-color: #fff;

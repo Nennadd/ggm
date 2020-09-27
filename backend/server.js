@@ -7,6 +7,8 @@ const PORT = process.env.PORT || 3000;
 // NOTE Server !!!
 const server = http.createServer((req, res) => {
   res.header("Access-Control-Allow-Origin", "*");
+  // res.header("Access-Control-Expose-Headers", "Content-Disposition");
+  // res.header("Content-Disposition: attachment", 'filename="example-file.csv');
 });
 
 // NOTE WebSocket !!!
@@ -16,7 +18,7 @@ const socket = require("./socket")(server);
 const db = require("mssql");
 const config = require("./config");
 
-async function getData() {
+(async () => {
   try {
     await db.connect(config);
 
@@ -70,15 +72,13 @@ async function getData() {
               Warehouse: record.onHand,
             });
           });
-          const date = new Date();
-          const csvFilePath = "csv/file-" + date.getTime() + ".csv";
-          const csv = fs.createWriteStream(csvFilePath);
-          fastCsv
-            .write(csvData, { headers: true })
-            .on("finish", () => {
-              ws.send(JSON.stringify({ type: "csv", path: csvFilePath }));
+
+          ws.send(
+            JSON.stringify({
+              type: "csv",
+              data: csvData,
             })
-            .pipe(csv);
+          );
         }
 
         // NOTE Search by date !!!
@@ -209,8 +209,7 @@ async function getData() {
   } catch (error) {
     console.log(error.message);
   }
-}
-getData();
+})();
 
 socket.on("close", () => {
   console.log("Disconnected !!!");
