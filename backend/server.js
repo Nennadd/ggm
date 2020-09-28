@@ -26,7 +26,11 @@ const config = require("./config");
     const getAll = async () => {
       return await db.query(`SELECT OITM.ItemCode, OITM.ItemName, OCRD.CardName as Supplier, RDR1.Price, 
       count(RDR1.ItemCode) as ArticleInOrders, OITM.onHand, 
-      (SELECT sum(RDR1.Price) FROM RDR1) as TotalPrice, 
+      
+      (SELECT sum(RDR1.Price) FROM RDR1 
+      JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
+      JOIN OCRD on OITM.CardCode = OCRD.CardCode 
+      WHERE OCRD.CardType = 'S') as TotalPrice, 
             
       (SELECT count(RDR1.ItemCode) FROM RDR1 JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
       JOIN OCRD on OITM.CardCode = OCRD.CardCode 

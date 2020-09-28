@@ -61,9 +61,6 @@ const render = (result, socket) => {
     option.className = "suppliers";
     option.textContent = supplier;
 
-    option.addEventListener("click", (e) => {
-      socket.send(JSON.stringify({ supplier: e.target.value }));
-    });
     if (!select[5]) {
       select.append(option);
     }
@@ -131,9 +128,11 @@ const dateTo = datepicker("#date-to", {
 });
 
 // NOTE WebSocket !!!
-
 (async function connect() {
-  let socket = await new WebSocket("ws://localhost:3000");
+  let socket = new WebSocket("ws://localhost:3000");
+
+  const isOpen = (socket) => socket.readyState === socket.OPEN;
+
   socket.addEventListener("open", () => {
     console.log("We are connected !");
     Swal.fire({
@@ -143,22 +142,137 @@ const dateTo = datepicker("#date-to", {
     });
   });
 
-  socket.addEventListener("close", () => {
-    console.log("Disconnected !");
-    Swal.fire({
-      icon: "error",
-      title: "Disconnected !!!",
-      timer: 2000,
-    });
-    intervalId = setTimeout(() => {
-      connect();
-    }, 5000);
-  });
-
-  // NOTE Export .csv or render list !!!
+  let csvExportData;
+  // NOTE Set export .csv data & render list !!!
   socket.addEventListener("message", async (data) => {
     const result = await JSON.parse(data.data);
-    if (result.type === "csv") {
+    csvExportData = result;
+
+    render(result, socket);
+  });
+
+  // NOTE Form !!!
+  const dateFromBtn = getElement(".date-from-btn");
+  const dateToBtn = getElement(".date-to-btn");
+
+  dateFromBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const today = formatedDate();
+    getElement("#date-from").value = today;
+  });
+  dateToBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const today = formatedDate();
+    getElement("#date-to").value = today;
+  });
+
+  // NOTE Item Code Autocomplete !!!
+  getElement("#item-code").addEventListener("keyup", (e) => {
+    if (isOpen(socket)) {
+      socket.send(JSON.stringify({ itemCode: e.target.value }));
+      getElement("#item-name").value = "";
+    }
+    // else {
+    //   Swal.fire({
+    //     icon: "error",
+    //     title: "Connection closed !",
+    //     text: "Reconnecting ...",
+    //     timer: 2000,
+    //   });
+    //   return;
+    // }
+  });
+  // NOTE Item Name Autocomplete !!!
+  getElement("#item-name").addEventListener("keyup", (e) => {
+    if (isOpen(socket)) {
+      socket.send(JSON.stringify({ itemName: e.target.value }));
+      getElement("#item-code").value = "";
+    }
+    // else {
+    //   Swal.fire({
+    //     icon: "error",
+    //     title: "Connection closed !",
+    //     text: "Reconnecting ...",
+    //     timer: 2000,
+    //   });
+    //   return;
+    // }
+  });
+  // NOTE Payment !!!
+  getElement("#payment").addEventListener("change", (e) => {
+    if (isOpen(socket)) {
+      socket.send(JSON.stringify({ payment: e.target.value }));
+    }
+    // else {
+    //   Swal.fire({
+    //     icon: "error",
+    //     title: "Connection closed !",
+    //     text: "Reconnecting ...",
+    //     timer: 2000,
+    //   });
+    //   return;
+    // }
+  });
+  // NOTE Suppliers !!!
+  getElement("#suppliers").addEventListener("change", (e) => {
+    if (isOpen(socket)) {
+      socket.send(JSON.stringify({ supplier: e.target.value }));
+    }
+    // else {
+    //   Swal.fire({
+    //     icon: "error",
+    //     title: "Connection closed !",
+    //     text: "Reconnecting ...",
+    //     timer: 2000,
+    //   });
+    //   return;
+    // }
+  });
+
+  // NOTE Submit form !!!
+  const submitBtn = getElement(".send");
+  submitBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+
+    const formData = { type: "form" };
+
+    formData.dateFrom = getElement("#date-from").value;
+    formData.dateTo = getElement("#date-to").value;
+
+    if (!formData.dateFrom || !formData.dateTo) {
+      Swal.fire({
+        icon: "error",
+        title: "Date fields are required !",
+        timer: 2000,
+      });
+      return;
+    }
+    if (!compareDate(formData.dateFrom, formData.dateTo)) {
+      Swal.fire({
+        icon: "error",
+        title: "Incorrect date values !",
+        timer: 2000,
+      });
+      return;
+    }
+    if (isOpen(socket)) {
+      socket.send(JSON.stringify(formData));
+    }
+    //  else {
+    //   Swal.fire({
+    //     icon: "error",
+    //     title: "Connection closed !",
+    //     text: "Reconnecting ...",
+    //     timer: 2000,
+    //   });
+    //   return;
+    // }
+  });
+
+  // NOTE Export CSV !!!
+  getElement(".export").addEventListener("click", (e) => {
+    e.preventDefault();
+    if (isOpen(socket)) {
       try {
         function convertArrayOfObjectsToCSV(args) {
           let result, ctr, keys, columnDelimiter, lineDelimiter, data;
@@ -193,7 +307,7 @@ const dateTo = datepicker("#date-to", {
         (function downloadCSV() {
           let data, filename, link;
           let csv = convertArrayOfObjectsToCSV({
-            data: result.data,
+            data: csvExportData,
           });
           if (csv == null) return;
 
@@ -212,78 +326,30 @@ const dateTo = datepicker("#date-to", {
       } catch (error) {
         console.log(error.message);
       }
-    } else {
-      render(result, socket);
     }
+    // else {
+    //   Swal.fire({
+    //     icon: "error",
+    //     title: "Connection closed !",
+    //     text: "Reconnecting ...",
+    //     timer: 2000,
+    //   });
+    //   return;
+    // }
   });
 
-  // NOTE Form !!!
-  const dateFromBtn = getElement(".date-from-btn");
-  const dateToBtn = getElement(".date-to-btn");
-
-  dateFromBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    const today = formatedDate();
-    getElement("#date-from").value = today;
-  });
-  dateToBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    const today = formatedDate();
-    getElement("#date-to").value = today;
+  socket.addEventListener("error", () => {
+    console.log("Reconnecting ....");
   });
 
-  // NOTE Item Code Autocomplete !!!
-  getElement("#item-code").addEventListener("keyup", (e) => {
-    socket.send(JSON.stringify({ itemCode: e.target.value }));
-    getElement("#item-name").value = "";
-  });
-  // NOTE Item Name Autocomplete !!!
-  getElement("#item-name").addEventListener("keyup", (e) => {
-    socket.send(JSON.stringify({ itemName: e.target.value }));
-    getElement("#item-code").value = "";
-  });
-  // NOTE Payment !!!
-  getElement("#payment").addEventListener("change", (e) => {
-    socket.send(JSON.stringify({ payment: e.target.value }));
-  });
-
-  // NOTE Submit form !!!
-  const submitBtn = getElement(".send");
-  submitBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-
-    const formData = { type: "form" };
-
-    formData.dateFrom = getElement("#date-from").value;
-    formData.dateTo = getElement("#date-to").value;
-
-    if (!formData.dateFrom || !formData.dateTo) {
-      Swal.fire({
-        icon: "error",
-        title: "Date fields are required !",
-        timer: 2000,
-      });
-      return;
-    }
-    if (!compareDate(formData.dateFrom, formData.dateTo)) {
-      Swal.fire({
-        icon: "error",
-        title: "Incorrect date values !",
-        timer: 2000,
-      });
-      return;
-    }
-
-    socket.send(JSON.stringify(formData));
-  });
-
-  // NOTE Export CSV !!!
-  getElement(".export").addEventListener("click", (e) => {
-    e.preventDefault();
-    try {
-      socket.send(JSON.stringify({ type: "csv" }));
-    } catch (error) {
-      console.log(error.message);
-    }
+  socket.addEventListener("close", () => {
+    Swal.fire({
+      icon: "error",
+      title: "Disconnected !!!",
+      timer: 2000,
+    });
+    intervalId = setTimeout(() => {
+      connect();
+    }, 5000);
   });
 })();
