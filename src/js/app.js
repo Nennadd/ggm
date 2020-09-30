@@ -172,15 +172,6 @@ const dateTo = datepicker("#date-to", {
       socket.send(JSON.stringify({ itemCode: e.target.value }));
       getElement("#item-name").value = "";
     }
-    // else {
-    //   Swal.fire({
-    //     icon: "error",
-    //     title: "Connection closed !",
-    //     text: "Reconnecting ...",
-    //     timer: 2000,
-    //   });
-    //   return;
-    // }
   });
   // NOTE Item Name Autocomplete !!!
   getElement("#item-name").addEventListener("keyup", (e) => {
@@ -188,45 +179,18 @@ const dateTo = datepicker("#date-to", {
       socket.send(JSON.stringify({ itemName: e.target.value }));
       getElement("#item-code").value = "";
     }
-    // else {
-    //   Swal.fire({
-    //     icon: "error",
-    //     title: "Connection closed !",
-    //     text: "Reconnecting ...",
-    //     timer: 2000,
-    //   });
-    //   return;
-    // }
   });
   // NOTE Payment !!!
   getElement("#payment").addEventListener("change", (e) => {
     if (isOpen(socket)) {
       socket.send(JSON.stringify({ payment: e.target.value }));
     }
-    // else {
-    //   Swal.fire({
-    //     icon: "error",
-    //     title: "Connection closed !",
-    //     text: "Reconnecting ...",
-    //     timer: 2000,
-    //   });
-    //   return;
-    // }
   });
   // NOTE Suppliers !!!
   getElement("#suppliers").addEventListener("change", (e) => {
     if (isOpen(socket)) {
       socket.send(JSON.stringify({ supplier: e.target.value }));
     }
-    // else {
-    //   Swal.fire({
-    //     icon: "error",
-    //     title: "Connection closed !",
-    //     text: "Reconnecting ...",
-    //     timer: 2000,
-    //   });
-    //   return;
-    // }
   });
 
   // NOTE Submit form !!!
@@ -258,15 +222,6 @@ const dateTo = datepicker("#date-to", {
     if (isOpen(socket)) {
       socket.send(JSON.stringify(formData));
     }
-    //  else {
-    //   Swal.fire({
-    //     icon: "error",
-    //     title: "Connection closed !",
-    //     text: "Reconnecting ...",
-    //     timer: 2000,
-    //   });
-    //   return;
-    // }
   });
 
   // NOTE Export CSV !!!
@@ -327,15 +282,6 @@ const dateTo = datepicker("#date-to", {
         console.log(error.message);
       }
     }
-    // else {
-    //   Swal.fire({
-    //     icon: "error",
-    //     title: "Connection closed !",
-    //     text: "Reconnecting ...",
-    //     timer: 2000,
-    //   });
-    //   return;
-    // }
   });
 
   socket.addEventListener("error", () => {

@@ -93,11 +93,23 @@ const config = require("./config");
           RDR1.Price, count(RDR1.ItemCode) as ArticleInOrders, OITM.onHand, 
 
           (SELECT sum(RDR1.Price) FROM RDR1 JOIN ORDR on ORDR.DocEntry = RDR1.DocEntry 
-          WHERE ORDR.DocDate between '${dateFrom}' AND '${dateTo}') as TotalPrice, 
+          JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
+          JOIN OCRD on OITM.CardCode = OCRD.CardCode 
+          WHERE OCRD.CardType = 'S' AND ORDR.DocDate between '${dateFrom}' AND '${dateTo}') as TotalPrice, 
                     
           (SELECT count(RDR1.ItemCode) FROM RDR1 JOIN ORDR on ORDR.DocEntry = RDR1.DocEntry 
-          WHERE ORDR.DocDate between '${dateFrom}' AND '${dateTo}') as SumOfArticles FROM OITM 
+          JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
+          JOIN OCRD on OITM.CardCode = OCRD.CardCode 
+          WHERE OCRD.CardType = 'S' AND ORDR.DocDate between '${dateFrom}' AND '${dateTo}') as SumOfArticles,
           
+          (SELECT (cast(count(RDR1.ItemCode) as float) / cast(count(DISTINCT RDR1.ItemCode) as float)) 
+          FROM RDR1 
+          JOIN ORDR on ORDR.DocEntry = RDR1.DocEntry 
+          JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
+          JOIN OCRD on OITM.CardCode = OCRD.CardCode 
+          WHERE OCRD.CardType = 'S' AND ORDR.DocDate between '${dateFrom}' AND '${dateTo}') as AvgArticleByOrder 
+          
+          FROM OITM 
           JOIN RDR1 on OITM.ItemCode = RDR1.ItemCode 
           JOIN OCRD on OITM.CardCode = OCRD.CardCode 
           JOIN ORDR on ORDR.DocEntry = RDR1.DocEntry 
@@ -123,7 +135,17 @@ const config = require("./config");
             RDR1.Price, count(RDR1.ItemCode) as ArticleInOrders, OITM.onHand, 
   
             (SELECT sum(RDR1.Price) FROM RDR1 JOIN OITM on OITM.ItemCode = RDR1.ItemCode JOIN OCRD on OITM.CardCode = OCRD.CardCode 
-            WHERE OCRD.CardType = 'S' AND OCRD.CardName = '${data.supplier}') as TotalPrice 
+            WHERE OCRD.CardType = 'S' AND OCRD.CardName = '${data.supplier}') as TotalPrice, 
+
+            (SELECT count(RDR1.ItemCode) FROM RDR1 JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
+            JOIN OCRD on OITM.CardCode = OCRD.CardCode 
+            WHERE OCRD.CardType = 'S' AND OCRD.CardName = '${data.supplier}' ) as SumOfArticles,
+
+            (SELECT (cast(count(RDR1.ItemCode) as float) / cast(count(DISTINCT RDR1.ItemCode) as float)) 
+            FROM RDR1 
+            JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
+            JOIN OCRD on OITM.CardCode = OCRD.CardCode 
+            WHERE OCRD.CardType = 'S' AND OCRD.CardName = '${data.supplier}' ) as AvgArticleByOrder
             
             FROM OITM JOIN RDR1 on OITM.ItemCode = RDR1.ItemCode 
             JOIN OCRD on OITM.CardCode = OCRD.CardCode 
@@ -143,24 +165,34 @@ const config = require("./config");
           if (data.payment === "all") {
             result = await getAll();
           } else {
-            result = await db.query(`SELECT OITM.ItemCode, OITM.ItemName, OCRD.CardName as Supplier, 
-            RDR1.Price, count(RDR1.ItemCode) as ArticleInOrders, OITM.onHand, 
-            
+            result = await db.query(`SELECT OITM.ItemCode, OITM.ItemName, OCRD.CardName as Supplier, RDR1.Price, OITM.onHand, count(RDR1.ItemCode)  as ArticleInOrders,
+                        
             (SELECT sum(RDR1.Price) FROM RDR1 JOIN ORDR on ORDR.DocEntry = RDR1.DocEntry 
             JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
             JOIN OCRD on OITM.CardCode = OCRD.CardCode 
             JOIN [@BOB_ORDR] on ORDR.DocEntry = [@BOB_ORDR].DocEntry 
             WHERE OCRD.CardType = 'S' AND [@BOB_ORDR].Zahlbetrag ${data.payment} ORDR.DocTotal ) as TotalPrice, 
-                      
+                                  
             (SELECT count(RDR1.ItemCode) FROM RDR1 JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
             JOIN OCRD on OITM.CardCode = OCRD.CardCode 
-            WHERE OCRD.CardType = 'S' ) as SumOfArticles FROM OITM 
-            
+            JOIN ORDR on ORDR.DocEntry = RDR1.DocEntry 
+            JOIN [@BOB_ORDR] on ORDR.DocEntry = [@BOB_ORDR].DocEntry 
+            WHERE OCRD.CardType = 'S' AND [@BOB_ORDR].Zahlbetrag ${data.payment} ORDR.DocTotal ) as SumOfArticles,
+
+            (SELECT (cast(count(RDR1.ItemCode) as float) / cast(count(DISTINCT RDR1.ItemCode) as float)) 
+            FROM RDR1 
+            JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
+            JOIN OCRD on OITM.CardCode = OCRD.CardCode 
+            JOIN ORDR on ORDR.DocEntry = RDR1.DocEntry 
+            JOIN [@BOB_ORDR] on ORDR.DocEntry = [@BOB_ORDR].DocEntry 
+            WHERE OCRD.CardType = 'S' AND [@BOB_ORDR].Zahlbetrag ${data.payment} ORDR.DocTotal) as AvgArticleByOrder
+
+            FROM OITM 
             JOIN RDR1 on OITM.ItemCode = RDR1.ItemCode 
             JOIN OCRD on OITM.CardCode = OCRD.CardCode 
             JOIN ORDR on ORDR.DocEntry = RDR1.DocEntry 
             JOIN [@BOB_ORDR] on ORDR.DocEntry = [@BOB_ORDR].DocEntry 
-            
+                        
             WHERE OCRD.CardType = 'S' AND [@BOB_ORDR].Zahlbetrag ${data.payment} ORDR.DocTotal 
             GROUP BY OITM.ItemCode, OITM.ItemName, OCRD.CardName, RDR1.Price, OITM.onHand`);
           }
@@ -181,11 +213,17 @@ const config = require("./config");
             
             (SELECT count(RDR1.ItemCode) FROM RDR1 JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
             JOIN OCRD on OITM.CardCode = OCRD.CardCode 
-            WHERE OCRD.CardType = 'S' ) as SumOfArticles
+            WHERE OCRD.CardType = 'S' AND OITM.ItemCode LIKE '%${data.itemCode}%' OR OITM.ItemName LIKE '%${data.itemName}%' ) as SumOfArticles, 
+
+            (SELECT (cast(count(RDR1.ItemCode) as float) / cast(count(DISTINCT RDR1.ItemCode) as float)) 
+            FROM RDR1 
+            JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
+            JOIN OCRD on OITM.CardCode = OCRD.CardCode 
+            WHERE OCRD.CardType = 'S' AND OITM.ItemCode LIKE '%${data.itemCode}%' OR OITM.ItemName LIKE '%${data.itemName}%') as AvgArticleByOrder
             
             FROM OITM JOIN RDR1 on OITM.ItemCode = RDR1.ItemCode 
             JOIN OCRD on OITM.CardCode = OCRD.CardCode 
-            WHERE OITM.ItemCode LIKE '%${data.itemCode}%' OR OITM.ItemName LIKE '%${data.itemName}%'
+            WHERE OCRD.CardType = 'S' AND OITM.ItemCode LIKE '%${data.itemCode}%' OR OITM.ItemName LIKE '%${data.itemName}%'
             GROUP BY OITM.ItemCode, OITM.ItemName, OCRD.CardName, RDR1.Price, OITM.onHand`);
 
           result.recordset.forEach((record) => {
