@@ -1,54 +1,27 @@
 const http = require("http");
-const fs = require("fs");
-const fastCsv = require("fast-csv");
 require("dotenv").config();
 const PORT = process.env.PORT || 3000;
+
+const Query = require("./utils/QueryBuilder");
 
 // NOTE Server !!!
 const server = http.createServer((req, res) => {
   res.header("Access-Control-Allow-Origin", "*");
-  // res.header("Access-Control-Expose-Headers", "Content-Disposition");
-  // res.header("Content-Disposition: attachment", 'filename="example-file.csv');
 });
 
 // NOTE WebSocket !!!
 const socket = require("./socket")(server);
 
 // NOTE MSSQL !!!
-const db = require("mssql");
-const config = require("./config");
+// const db = require("mssql");
+// const config = require("./config");
 
 (async () => {
   try {
-    await db.connect(config);
-
     // NOTE Get all !!!
-    const getAll = async () => {
-      return await db.query(`SELECT OITM.ItemCode, OITM.ItemName, OCRD.CardName as Supplier, RDR1.Price, 
-      count(RDR1.ItemCode) as ArticleInOrders, OITM.onHand, 
-      
-      (SELECT sum(RDR1.Price) FROM RDR1 
-      JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
-      JOIN OCRD on OITM.CardCode = OCRD.CardCode 
-      WHERE OCRD.CardType = 'S') as TotalPrice, 
-            
-      (SELECT count(RDR1.ItemCode) FROM RDR1 JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
-      JOIN OCRD on OITM.CardCode = OCRD.CardCode 
-      WHERE OCRD.CardType = 'S' ) as SumOfArticles,
-      
-      (SELECT (cast(count(RDR1.ItemCode) as float) / cast(count(DISTINCT RDR1.ItemCode) as float)) FROM RDR1 
-      JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
-      JOIN OCRD on OITM.CardCode = OCRD.CardCode 
-      WHERE OCRD.CardType = 'S' ) as AvgArticleByOrder
-            
-      FROM OITM JOIN RDR1 on OITM.ItemCode = RDR1.ItemCode 
-      JOIN OCRD on OITM.CardCode = OCRD.CardCode 
-      WHERE OCRD.CardType = 'S'
-      GROUP BY OITM.ItemCode, OITM.ItemName, OCRD.CardName, RDR1.Price, OITM.onHand`);
-    };
-    const result = await getAll();
+    const result = await Query.getAll();
 
-    await socket.on("connect", (ws) => {
+    socket.on("connect", (ws) => {
       console.log("Connected !!!");
       let data = [];
       result.recordset.forEach((record) => {
@@ -87,35 +60,7 @@ const config = require("./config");
 
         // NOTE Search by date !!!
         if (data.type === "form") {
-          const { dateFrom, dateTo } = data;
-
-          const result = await db.query(`SELECT OITM.ItemCode, OITM.ItemName, OCRD.CardName as Supplier, 
-          RDR1.Price, count(RDR1.ItemCode) as ArticleInOrders, OITM.onHand, 
-
-          (SELECT sum(RDR1.Price) FROM RDR1 JOIN ORDR on ORDR.DocEntry = RDR1.DocEntry 
-          JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
-          JOIN OCRD on OITM.CardCode = OCRD.CardCode 
-          WHERE OCRD.CardType = 'S' AND ORDR.DocDate between '${dateFrom}' AND '${dateTo}') as TotalPrice, 
-                    
-          (SELECT count(RDR1.ItemCode) FROM RDR1 JOIN ORDR on ORDR.DocEntry = RDR1.DocEntry 
-          JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
-          JOIN OCRD on OITM.CardCode = OCRD.CardCode 
-          WHERE OCRD.CardType = 'S' AND ORDR.DocDate between '${dateFrom}' AND '${dateTo}') as SumOfArticles,
-          
-          (SELECT (cast(count(RDR1.ItemCode) as float) / cast(count(DISTINCT RDR1.ItemCode) as float)) 
-          FROM RDR1 
-          JOIN ORDR on ORDR.DocEntry = RDR1.DocEntry 
-          JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
-          JOIN OCRD on OITM.CardCode = OCRD.CardCode 
-          WHERE OCRD.CardType = 'S' AND ORDR.DocDate between '${dateFrom}' AND '${dateTo}') as AvgArticleByOrder 
-          
-          FROM OITM 
-          JOIN RDR1 on OITM.ItemCode = RDR1.ItemCode 
-          JOIN OCRD on OITM.CardCode = OCRD.CardCode 
-          JOIN ORDR on ORDR.DocEntry = RDR1.DocEntry 
-          
-          WHERE OCRD.CardType = 'S' AND ORDR.DocDate between '${dateFrom}' AND '${dateTo}'
-          GROUP BY OITM.ItemCode, OITM.ItemName, OCRD.CardName, RDR1.Price, OITM.onHand`);
+          const result = await Query.searchByDate(data);
 
           result.recordset.forEach((record) => {
             response.push(record);
@@ -127,31 +72,8 @@ const config = require("./config");
 
         // NOTE Search by Supplier !!!
         if (data.supplier) {
-          let result;
-          if (data.supplier === "all") {
-            result = await getAll();
-          } else {
-            result = await db.query(`SELECT OITM.ItemCode, OITM.ItemName, OCRD.CardName as Supplier, 
-            RDR1.Price, count(RDR1.ItemCode) as ArticleInOrders, OITM.onHand, 
-  
-            (SELECT sum(RDR1.Price) FROM RDR1 JOIN OITM on OITM.ItemCode = RDR1.ItemCode JOIN OCRD on OITM.CardCode = OCRD.CardCode 
-            WHERE OCRD.CardType = 'S' AND OCRD.CardName = '${data.supplier}') as TotalPrice, 
+          const result = await Query.searchBySupplier(data.supplier);
 
-            (SELECT count(RDR1.ItemCode) FROM RDR1 JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
-            JOIN OCRD on OITM.CardCode = OCRD.CardCode 
-            WHERE OCRD.CardType = 'S' AND OCRD.CardName = '${data.supplier}' ) as SumOfArticles,
-
-            (SELECT (cast(count(RDR1.ItemCode) as float) / cast(count(DISTINCT RDR1.ItemCode) as float)) 
-            FROM RDR1 
-            JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
-            JOIN OCRD on OITM.CardCode = OCRD.CardCode 
-            WHERE OCRD.CardType = 'S' AND OCRD.CardName = '${data.supplier}' ) as AvgArticleByOrder
-            
-            FROM OITM JOIN RDR1 on OITM.ItemCode = RDR1.ItemCode 
-            JOIN OCRD on OITM.CardCode = OCRD.CardCode 
-            WHERE OCRD.CardType = 'S' AND OCRD.CardName = '${data.supplier}'
-            GROUP BY OITM.ItemCode, OITM.ItemName, OCRD.CardName, RDR1.Price, OITM.onHand`);
-          }
           result.recordset.forEach((record) => {
             response.push(record);
           });
@@ -161,41 +83,8 @@ const config = require("./config");
 
         // NOTE Payment !!!
         if (data.payment) {
-          let result;
-          if (data.payment === "all") {
-            result = await getAll();
-          } else {
-            result = await db.query(`SELECT OITM.ItemCode, OITM.ItemName, OCRD.CardName as Supplier, RDR1.Price, OITM.onHand, count(RDR1.ItemCode)  as ArticleInOrders,
-                        
-            (SELECT sum(RDR1.Price) FROM RDR1 JOIN ORDR on ORDR.DocEntry = RDR1.DocEntry 
-            JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
-            JOIN OCRD on OITM.CardCode = OCRD.CardCode 
-            JOIN [@BOB_ORDR] on ORDR.DocEntry = [@BOB_ORDR].DocEntry 
-            WHERE OCRD.CardType = 'S' AND [@BOB_ORDR].Zahlbetrag ${data.payment} ORDR.DocTotal ) as TotalPrice, 
-                                  
-            (SELECT count(RDR1.ItemCode) FROM RDR1 JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
-            JOIN OCRD on OITM.CardCode = OCRD.CardCode 
-            JOIN ORDR on ORDR.DocEntry = RDR1.DocEntry 
-            JOIN [@BOB_ORDR] on ORDR.DocEntry = [@BOB_ORDR].DocEntry 
-            WHERE OCRD.CardType = 'S' AND [@BOB_ORDR].Zahlbetrag ${data.payment} ORDR.DocTotal ) as SumOfArticles,
+          const result = await Query.searchByPayment(data.payment);
 
-            (SELECT (cast(count(RDR1.ItemCode) as float) / cast(count(DISTINCT RDR1.ItemCode) as float)) 
-            FROM RDR1 
-            JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
-            JOIN OCRD on OITM.CardCode = OCRD.CardCode 
-            JOIN ORDR on ORDR.DocEntry = RDR1.DocEntry 
-            JOIN [@BOB_ORDR] on ORDR.DocEntry = [@BOB_ORDR].DocEntry 
-            WHERE OCRD.CardType = 'S' AND [@BOB_ORDR].Zahlbetrag ${data.payment} ORDR.DocTotal) as AvgArticleByOrder
-
-            FROM OITM 
-            JOIN RDR1 on OITM.ItemCode = RDR1.ItemCode 
-            JOIN OCRD on OITM.CardCode = OCRD.CardCode 
-            JOIN ORDR on ORDR.DocEntry = RDR1.DocEntry 
-            JOIN [@BOB_ORDR] on ORDR.DocEntry = [@BOB_ORDR].DocEntry 
-                        
-            WHERE OCRD.CardType = 'S' AND [@BOB_ORDR].Zahlbetrag ${data.payment} ORDR.DocTotal 
-            GROUP BY OITM.ItemCode, OITM.ItemName, OCRD.CardName, RDR1.Price, OITM.onHand`);
-          }
           result.recordset.forEach((record) => {
             response.push(record);
           });
@@ -205,26 +94,7 @@ const config = require("./config");
 
         // NOTE ItemCode & ItemName autocomplete !!!
         if (data.itemCode || data.itemName) {
-          const result = await db.query(`SELECT OITM.ItemCode, OITM.ItemName, OCRD.CardName as Supplier, 
-          RDR1.Price, count(RDR1.ItemCode) as ArticleInOrders, OITM.onHand, 
-
-            (SELECT sum(RDR1.Price) FROM RDR1 JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
-            WHERE OITM.ItemCode LIKE '%${data.itemCode}%' OR OITM.ItemName LIKE '%${data.itemName}%') as TotalPrice, 
-            
-            (SELECT count(RDR1.ItemCode) FROM RDR1 JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
-            JOIN OCRD on OITM.CardCode = OCRD.CardCode 
-            WHERE OCRD.CardType = 'S' AND OITM.ItemCode LIKE '%${data.itemCode}%' OR OITM.ItemName LIKE '%${data.itemName}%' ) as SumOfArticles, 
-
-            (SELECT (cast(count(RDR1.ItemCode) as float) / cast(count(DISTINCT RDR1.ItemCode) as float)) 
-            FROM RDR1 
-            JOIN OITM on OITM.ItemCode = RDR1.ItemCode 
-            JOIN OCRD on OITM.CardCode = OCRD.CardCode 
-            WHERE OCRD.CardType = 'S' AND OITM.ItemCode LIKE '%${data.itemCode}%' OR OITM.ItemName LIKE '%${data.itemName}%') as AvgArticleByOrder
-            
-            FROM OITM JOIN RDR1 on OITM.ItemCode = RDR1.ItemCode 
-            JOIN OCRD on OITM.CardCode = OCRD.CardCode 
-            WHERE OCRD.CardType = 'S' AND OITM.ItemCode LIKE '%${data.itemCode}%' OR OITM.ItemName LIKE '%${data.itemName}%'
-            GROUP BY OITM.ItemCode, OITM.ItemName, OCRD.CardName, RDR1.Price, OITM.onHand`);
+          const result = await Query.searchByItemCodeOrName(data);
 
           result.recordset.forEach((record) => {
             response.push(record);
@@ -235,7 +105,7 @@ const config = require("./config");
         }
 
         if (!data.itemCode && !data.itemName) {
-          const result = await getAll();
+          const result = await Query.getAll();
 
           result.recordset.forEach((record) => {
             response.push(record);
