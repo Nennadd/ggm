@@ -1,9 +1,8 @@
-const db = require("mssql");
-const config = require("../config");
+const pool = require("./database");
 
 class Query {
   static async getAll() {
-    await db.connect(config);
+    const db = await pool;
     const result = await db.query(`SELECT OITM.ItemCode, OITM.ItemName, OCRD.CardName as Supplier, RDR1.Price, 
     count(RDR1.ItemCode) as ArticleInOrders, OITM.onHand, 
     
@@ -30,8 +29,8 @@ class Query {
   }
 
   static async searchByDate(data) {
+    const db = await pool;
     const { dateFrom, dateTo } = data;
-    await db.connect(config);
     const result = await db.query(`SELECT OITM.ItemCode, OITM.ItemName, OCRD.CardName as Supplier, 
     RDR1.Price, count(RDR1.ItemCode) as ArticleInOrders, OITM.onHand, 
 
@@ -64,8 +63,7 @@ class Query {
   }
 
   static async searchBySupplier(supplier) {
-    await db.connect(config);
-
+    const db = await pool;
     if (supplier === "all") {
       return await this.getAll();
     } else {
@@ -93,8 +91,7 @@ class Query {
   }
 
   static async searchByPayment(payment) {
-    await db.connect(config);
-
+    const db = await pool;
     if (payment === "all") {
       return await this.getAll();
     } else {
@@ -132,8 +129,7 @@ class Query {
   }
 
   static async searchByItemCodeOrName(data) {
-    await db.connect(config);
-
+    const db = await pool;
     return await db.query(`SELECT OITM.ItemCode, OITM.ItemName, OCRD.CardName as Supplier, 
         RDR1.Price, count(RDR1.ItemCode) as ArticleInOrders, OITM.onHand, 
 

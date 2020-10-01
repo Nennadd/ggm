@@ -35,7 +35,7 @@ const socket = require("./socket")(server);
 
         // NOTE Expot .csv !!!
         if (data.type === "csv") {
-          const result = await getAll();
+          const result = await Query.getAll();
 
           const csvData = [];
           result.recordset.forEach((record) => {
