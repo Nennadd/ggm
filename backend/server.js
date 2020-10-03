@@ -12,10 +12,6 @@ const server = http.createServer((req, res) => {
 // NOTE WebSocket !!!
 const socket = require("./socket")(server);
 
-// NOTE MSSQL !!!
-// const db = require("mssql");
-// const config = require("./config");
-
 (async () => {
   try {
     // NOTE Get all !!!

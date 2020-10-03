@@ -24,10 +24,9 @@ const dateTo = datepicker("#date-to", {
 });
 
 // NOTE WebSocket !!!
+const isOpen = (socket) => socket.readyState === socket.OPEN;
 (async function connect() {
   let socket = new WebSocket("ws://localhost:3000");
-
-  const isOpen = (socket) => socket.readyState === socket.OPEN;
 
   socket.addEventListener("open", () => {
     console.log("We are connected !");
