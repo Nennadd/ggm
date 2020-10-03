@@ -12,6 +12,7 @@
   "dependencies": {
     "dotenv": "^8.2.0",
     "mssql": "^6.2.1",
+    "sequelize": "^6.3.5",
     "tedious": "^9.2.1",
     "websocket": "^1.0.32"
   }
