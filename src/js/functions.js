@@ -8,6 +8,8 @@ const tbody = getElement("tbody");
 // NOTE Render Table !!!
 const render = (result, socket) => {
   tbody.innerHTML = "";
+  const footerTd = document.querySelectorAll("tfoot tr td");
+  footerTd.forEach((element) => (element.textContent = ""));
   result.forEach((item) => {
     const tr = document.createElement("tr");
 
