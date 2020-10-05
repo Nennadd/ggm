@@ -32,8 +32,10 @@ class Query {
   static async searchByDate(data) {
     const { dateFrom, dateTo } = data;
     const request = new mssql.Request(await pool);
+
     request.input("dateFrom", mssql.VarChar, dateFrom);
     request.input("dateTo", mssql.VarChar, dateTo);
+
     return await request.query(`SELECT OITM.ItemCode, OITM.ItemName, OCRD.CardName as Supplier, 
     RDR1.Price, count(RDR1.ItemCode) as ArticleInOrders, OITM.onHand, 
 
@@ -67,9 +69,10 @@ class Query {
     if (supplier === "all") {
       return await this.getAll();
     } else {
-      // db = await pool;
       const request = new mssql.Request(await pool);
+
       request.input("supplier", mssql.VarChar, supplier);
+
       return await request.query(`SELECT OITM.ItemCode, OITM.ItemName, OCRD.CardName as Supplier,
           RDR1.Price, count(RDR1.ItemCode) as ArticleInOrders, OITM.onHand,
 
