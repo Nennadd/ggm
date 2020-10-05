@@ -6,7 +6,7 @@ const suppliers = new Set();
 const tbody = getElement("tbody");
 
 // NOTE Render Table !!!
-const render = (result, socket) => {
+const render = (result) => {
   tbody.innerHTML = "";
   const footerTd = document.querySelectorAll("tfoot tr td");
   footerTd.forEach((element) => (element.textContent = ""));

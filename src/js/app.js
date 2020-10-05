@@ -41,9 +41,15 @@ const isOpen = (socket) => socket.readyState === socket.OPEN;
   // NOTE Set export .csv data & render list !!!
   socket.addEventListener("message", async (data) => {
     const result = await JSON.parse(data.data);
-    csvExportData = result;
-
-    render(result, socket);
+    csvExportData = await result;
+    try {
+      getElement(".spinner-modal").style.display = "flex";
+      render(result);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      getElement(".spinner-modal").style.display = "none";
+    }
   });
 
   // NOTE Form !!!
