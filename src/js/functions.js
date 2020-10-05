@@ -103,3 +103,10 @@ const prependZero = (value) => {
     .reverse()
     .join("-");
 };
+
+function resetForm() {
+  getElement("#suppliers").value = "all";
+  getElement("#payment").value = "all";
+  getElement("#item-code").value = "";
+  getElement("#item-name").value = "";
+}

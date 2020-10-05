@@ -27,7 +27,6 @@ const dateTo = datepicker("#date-to", {
 const isOpen = (socket) => socket.readyState === socket.OPEN;
 (async function connect() {
   let socket = new WebSocket("ws://localhost:3000");
-
   socket.addEventListener("open", () => {
     console.log("We are connected !");
     Swal.fire({
@@ -72,6 +71,7 @@ const isOpen = (socket) => socket.readyState === socket.OPEN;
     if (isOpen(socket)) {
       socket.send(JSON.stringify({ itemCode: e.target.value }));
       getElement("#item-name").value = "";
+      return;
     }
   });
   // NOTE Item Name Autocomplete !!!
@@ -79,18 +79,34 @@ const isOpen = (socket) => socket.readyState === socket.OPEN;
     if (isOpen(socket)) {
       socket.send(JSON.stringify({ itemName: e.target.value }));
       getElement("#item-code").value = "";
+      return;
     }
   });
   // NOTE Payment !!!
   getElement("#payment").addEventListener("change", (e) => {
     if (isOpen(socket)) {
       socket.send(JSON.stringify({ payment: e.target.value }));
+      return;
     }
   });
+  getElement(".payment-all").addEventListener("click", (e) => {
+    if (isOpen(socket)) {
+      socket.send(JSON.stringify({ payment: e.target.value }));
+      return;
+    }
+  });
+
   // NOTE Suppliers !!!
   getElement("#suppliers").addEventListener("change", (e) => {
     if (isOpen(socket)) {
       socket.send(JSON.stringify({ supplier: e.target.value }));
+      return;
+    }
+  });
+  getElement(".all-suppliers").addEventListener("click", (e) => {
+    if (isOpen(socket)) {
+      socket.send(JSON.stringify({ supplier: e.target.value }));
+      return;
     }
   });
 
@@ -122,6 +138,7 @@ const isOpen = (socket) => socket.readyState === socket.OPEN;
     }
     if (isOpen(socket)) {
       socket.send(JSON.stringify(formData));
+      resetForm();
     }
   });
 
@@ -165,7 +182,14 @@ const isOpen = (socket) => socket.readyState === socket.OPEN;
           let csv = convertArrayOfObjectsToCSV({
             data: csvExportData,
           });
-          if (csv == null) return;
+          if (csv == null) {
+            Swal.fire({
+              icon: "error",
+              title: "No data for export !",
+              timer: 2000,
+            });
+            return;
+          }
 
           filename = "data.csv";
 
