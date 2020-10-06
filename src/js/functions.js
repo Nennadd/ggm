@@ -6,7 +6,7 @@ const suppliers = new Set();
 const tbody = getElement("tbody");
 
 // NOTE Render Table !!!
-const render = (result) => {
+const render = async (result) => {
   tbody.innerHTML = "";
   const footerTd = document.querySelectorAll("tfoot tr td");
   footerTd.forEach((element) => (element.textContent = ""));
@@ -110,3 +110,5 @@ function resetForm() {
   getElement("#item-code").value = "";
   getElement("#item-name").value = "";
 }
+
+const isOpen = (socket) => socket.readyState === socket.OPEN;
