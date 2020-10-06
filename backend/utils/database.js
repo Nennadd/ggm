@@ -2,7 +2,6 @@ const sql = require("mssql");
 const config = require("../config");
 
 let pool = null;
-
 const closePool = async () => {
   try {
     await pool.close();
