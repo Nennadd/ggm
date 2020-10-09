@@ -2,36 +2,15 @@ window.addEventListener("load", () => {
   getElement(".spinner-modal").style.display = "none";
 
   // NOTE Datepicker !!!
-  const options = { year: "numeric", month: "numeric", day: "numeric" };
-  const dateFrom = datepicker("#date-from", {
-    formatter: (input, date, instance) => {
-      const value = date.toLocaleDateString("de-DE", options);
-
-      // NOTE prepend zero !!!
-      const formatted = prependZero(value);
-      input.value = formatted;
-    },
-  });
-  const dateTo = datepicker("#date-to", {
-    formatter: (input, date, instance) => {
-      const value = date.toLocaleDateString("de-DE", options);
-
-      // NOTE prepend zero !!!
-      const formatted = prependZero(value);
-      input.value = formatted;
-    },
-  });
+  pickDate("#date-from");
+  pickDate("#date-to");
 
   // NOTE WebSocket !!!
   (async function connect() {
-    let socket = await new WebSocket("ws://localhost:3000");
+    let socket = new WebSocket("ws://localhost:3000");
     socket.addEventListener("open", () => {
       console.log("We are connected !");
-      Swal.fire({
-        icon: "success",
-        title: "Connected !",
-        timer: 2000,
-      });
+      showMessage("success", "Connected !");
     });
 
     let csvExportData;
@@ -41,7 +20,7 @@ window.addEventListener("load", () => {
       csvExportData = await result;
       try {
         getElement(".spinner-modal").style.display = "flex";
-        await render(result);
+        await render()(result);
       } catch (error) {
         console.log(error);
       } finally {
@@ -50,15 +29,12 @@ window.addEventListener("load", () => {
     });
 
     // NOTE Form !!!
-    const dateFromBtn = getElement(".date-from-btn");
-    const dateToBtn = getElement(".date-to-btn");
-
-    dateFromBtn.addEventListener("click", (e) => {
+    getElement(".date-from-btn").addEventListener("click", (e) => {
       e.preventDefault();
       const today = formatedDate();
       getElement("#date-from").value = today;
     });
-    dateToBtn.addEventListener("click", (e) => {
+    getElement(".date-to-btn").addEventListener("click", (e) => {
       e.preventDefault();
       const today = formatedDate();
       getElement("#date-to").value = today;
@@ -66,47 +42,25 @@ window.addEventListener("load", () => {
 
     // NOTE Item Code Autocomplete !!!
     getElement("#item-code").addEventListener("keyup", (e) => {
-      if (isOpen(socket)) {
-        socket.send(JSON.stringify({ itemCode: e.target.value }));
-        getElement("#item-name").value = "";
-        return;
-      }
+      sendRequest(socket, { itemCode: e.target.value }, "#item-name");
     });
     // NOTE Item Name Autocomplete !!!
     getElement("#item-name").addEventListener("keyup", (e) => {
-      if (isOpen(socket)) {
-        socket.send(JSON.stringify({ itemName: e.target.value }));
-        getElement("#item-code").value = "";
-        return;
-      }
+      sendRequest(socket, { itemName: e.target.value }, "#item-code");
     });
     // NOTE Payment !!!
     getElement("#payment").addEventListener("change", (e) => {
-      if (isOpen(socket)) {
-        socket.send(JSON.stringify({ payment: e.target.value }));
-        return;
-      }
+      sendRequest(socket, { payment: e.target.value });
     });
     getElement(".payment-all").addEventListener("click", (e) => {
-      console.log(e.target.value);
-      if (isOpen(socket)) {
-        socket.send(JSON.stringify({ payment: e.target.value }));
-        return;
-      }
+      sendRequest(socket, { payment: e.target.value });
     });
-
     // NOTE Suppliers !!!
     getElement("#suppliers").addEventListener("change", (e) => {
-      if (isOpen(socket)) {
-        socket.send(JSON.stringify({ supplier: e.target.value }));
-        return;
-      }
+      sendRequest(socket, { supplier: e.target.value });
     });
     getElement(".all-suppliers").addEventListener("click", (e) => {
-      if (isOpen(socket)) {
-        socket.send(JSON.stringify({ supplier: e.target.value }));
-        return;
-      }
+      sendRequest(socket, { supplier: e.target.value });
     });
 
     // NOTE Submit form !!!
@@ -115,25 +69,14 @@ window.addEventListener("load", () => {
       e.preventDefault();
 
       const formData = { type: "form" };
-
       formData.dateFrom = getElement("#date-from").value;
       formData.dateTo = getElement("#date-to").value;
 
       if (!formData.dateFrom || !formData.dateTo) {
-        Swal.fire({
-          icon: "error",
-          title: "Date fields are required !",
-          timer: 2000,
-        });
-        return;
+        return showMessage("error", "Date fields are required !");
       }
       if (!compareDate(formData.dateFrom, formData.dateTo)) {
-        Swal.fire({
-          icon: "error",
-          title: "Incorrect date values !",
-          timer: 2000,
-        });
-        return;
+        return showMessage("error", "Incorrect date values !");
       }
       if (isOpen(socket)) {
         socket.send(JSON.stringify(formData));
@@ -143,7 +86,6 @@ window.addEventListener("load", () => {
 
     // NOTE Export CSV !!!
     getElement(".export").addEventListener("click", (e) => {
-      e.preventDefault();
       if (isOpen(socket)) {
         try {
           function convertArrayOfObjectsToCSV(args) {
@@ -182,12 +124,7 @@ window.addEventListener("load", () => {
               data: csvExportData,
             });
             if (csv == null) {
-              Swal.fire({
-                icon: "error",
-                title: "No data for export !",
-                timer: 2000,
-              });
-              return;
+              return showMessage("error", "No data for export !");
             }
 
             filename = "data.csv";
@@ -211,13 +148,8 @@ window.addEventListener("load", () => {
     socket.addEventListener("error", () => {
       console.log("Reconnecting ....");
     });
-
     socket.addEventListener("close", () => {
-      Swal.fire({
-        icon: "error",
-        title: "Disconnected !!!",
-        timer: 2000,
-      });
+      showMessage("error", "Disconnected");
       intervalId = setTimeout(() => {
         connect();
       }, 5000);
