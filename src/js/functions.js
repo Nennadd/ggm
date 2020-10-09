@@ -112,3 +112,11 @@ function resetForm() {
 }
 
 const isOpen = (socket) => socket.readyState === socket.OPEN;
+
+const showMessage = (status, message) => {
+  Swal.fire({
+    icon: status,
+    title: message,
+    timer: 2000,
+  });
+};

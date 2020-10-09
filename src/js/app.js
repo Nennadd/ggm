@@ -27,11 +27,7 @@ window.addEventListener("load", () => {
     let socket = await new WebSocket("ws://localhost:3000");
     socket.addEventListener("open", () => {
       console.log("We are connected !");
-      Swal.fire({
-        icon: "success",
-        title: "Connected !",
-        timer: 2000,
-      });
+      showMessage("success", "Connected");
     });
 
     let csvExportData;
@@ -120,19 +116,11 @@ window.addEventListener("load", () => {
       formData.dateTo = getElement("#date-to").value;
 
       if (!formData.dateFrom || !formData.dateTo) {
-        Swal.fire({
-          icon: "error",
-          title: "Date fields are required !",
-          timer: 2000,
-        });
+        showMessage("error", "Date fields are required !");
         return;
       }
       if (!compareDate(formData.dateFrom, formData.dateTo)) {
-        Swal.fire({
-          icon: "error",
-          title: "Incorrect date values !",
-          timer: 2000,
-        });
+        showMessage("error", "Incorrect date values !");
         return;
       }
       if (isOpen(socket)) {
@@ -213,11 +201,7 @@ window.addEventListener("load", () => {
     });
 
     socket.addEventListener("close", () => {
-      Swal.fire({
-        icon: "error",
-        title: "Disconnected !!!",
-        timer: 2000,
-      });
+      showMessage("error", "Disconnected !");
       intervalId = setTimeout(() => {
         connect();
       }, 5000);
