@@ -1,9 +1,9 @@
 window.addEventListener("load", () => {
   getElement(".spinner-modal").style.display = "none";
 
-  // NOTE Datepicker !!!
-  pickDate("#date-from");
-  pickDate("#date-to");
+  // NOTE Datepicker and event listeners on date buttons !!!
+  pickDate("date-from");
+  pickDate("date-to");
 
   // NOTE WebSocket !!!
   (async function connect() {
@@ -26,18 +26,6 @@ window.addEventListener("load", () => {
       } finally {
         getElement(".spinner-modal").style.display = "none";
       }
-    });
-
-    // NOTE Form !!!
-    getElement(".date-from-btn").addEventListener("click", (e) => {
-      e.preventDefault();
-      const today = formatedDate();
-      getElement("#date-from").value = today;
-    });
-    getElement(".date-to-btn").addEventListener("click", (e) => {
-      e.preventDefault();
-      const today = formatedDate();
-      getElement("#date-to").value = today;
     });
 
     // NOTE Item Code Autocomplete !!!
@@ -86,7 +74,6 @@ window.addEventListener("load", () => {
 
     // NOTE Export CSV !!!
     getElement(".export").addEventListener("click", (e) => {
-      e.preventDefault();
       if (isOpen(socket)) {
         try {
           function convertArrayOfObjectsToCSV(args) {
@@ -150,7 +137,6 @@ window.addEventListener("load", () => {
     socket.addEventListener("error", () => {
       console.log("Reconnecting ....");
     });
-
     socket.addEventListener("close", () => {
       showMessage("error", "Disconnected !");
       intervalId = setTimeout(() => {

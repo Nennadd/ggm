@@ -133,7 +133,7 @@ const showMessage = (status, message) => {
 
 const pickDate = (element) => {
   const options = { year: "numeric", month: "numeric", day: "numeric" };
-  return datepicker(element, {
+  datepicker(`#${element}`, {
     formatter: (input, date, instance) => {
       const value = date.toLocaleDateString("de-DE", options);
 
@@ -141,5 +141,10 @@ const pickDate = (element) => {
       const formatted = prependZero(value);
       input.value = formatted;
     },
+  });
+  getElement(`.${element}`).addEventListener("click", (e) => {
+    e.preventDefault();
+    const today = formatedDate();
+    getElement(`#${element}`).value = today;
   });
 };
