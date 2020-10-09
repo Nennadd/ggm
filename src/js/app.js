@@ -2,29 +2,12 @@ window.addEventListener("load", () => {
   getElement(".spinner-modal").style.display = "none";
 
   // NOTE Datepicker !!!
-  const options = { year: "numeric", month: "numeric", day: "numeric" };
-  const dateFrom = datepicker("#date-from", {
-    formatter: (input, date, instance) => {
-      const value = date.toLocaleDateString("de-DE", options);
-
-      // NOTE prepend zero !!!
-      const formatted = prependZero(value);
-      input.value = formatted;
-    },
-  });
-  const dateTo = datepicker("#date-to", {
-    formatter: (input, date, instance) => {
-      const value = date.toLocaleDateString("de-DE", options);
-
-      // NOTE prepend zero !!!
-      const formatted = prependZero(value);
-      input.value = formatted;
-    },
-  });
+  pickDate("#date-from");
+  pickDate("#date-to");
 
   // NOTE WebSocket !!!
   (async function connect() {
-    let socket = await new WebSocket("ws://localhost:3000");
+    let socket = new WebSocket("ws://localhost:3000");
     socket.addEventListener("open", () => {
       console.log("We are connected !");
       showMessage("success", "Connected");
@@ -37,7 +20,7 @@ window.addEventListener("load", () => {
       csvExportData = await result;
       try {
         getElement(".spinner-modal").style.display = "flex";
-        await render(result);
+        await render()(result);
       } catch (error) {
         console.log(error);
       } finally {
@@ -170,11 +153,7 @@ window.addEventListener("load", () => {
               data: csvExportData,
             });
             if (csv == null) {
-              Swal.fire({
-                icon: "error",
-                title: "No data for export !",
-                timer: 2000,
-              });
+              showMessage("error", "No data for export !");
               return;
             }
 
