@@ -67,6 +67,17 @@ const render = () => {
   };
 };
 
+const sendRequest = (socket, obj, clearInput = null) => {
+  try {
+    if (isOpen(socket)) {
+      socket.send(JSON.stringify(obj));
+      if (clearInput) getElement(clearInput).value = "";
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
 const formatedDate = () => {
   const date = new Date();
 

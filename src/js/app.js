@@ -29,15 +29,12 @@ window.addEventListener("load", () => {
     });
 
     // NOTE Form !!!
-    const dateFromBtn = getElement(".date-from-btn");
-    const dateToBtn = getElement(".date-to-btn");
-
-    dateFromBtn.addEventListener("click", (e) => {
+    getElement(".date-from-btn").addEventListener("click", (e) => {
       e.preventDefault();
       const today = formatedDate();
       getElement("#date-from").value = today;
     });
-    dateToBtn.addEventListener("click", (e) => {
+    getElement(".date-to-btn").addEventListener("click", (e) => {
       e.preventDefault();
       const today = formatedDate();
       getElement("#date-to").value = today;
@@ -45,66 +42,41 @@ window.addEventListener("load", () => {
 
     // NOTE Item Code Autocomplete !!!
     getElement("#item-code").addEventListener("keyup", (e) => {
-      if (isOpen(socket)) {
-        socket.send(JSON.stringify({ itemCode: e.target.value }));
-        getElement("#item-name").value = "";
-        return;
-      }
+      return sendRequest(socket, { itemCode: e.target.value }, "#item-name");
     });
     // NOTE Item Name Autocomplete !!!
     getElement("#item-name").addEventListener("keyup", (e) => {
-      if (isOpen(socket)) {
-        socket.send(JSON.stringify({ itemName: e.target.value }));
-        getElement("#item-code").value = "";
-        return;
-      }
+      return sendRequest(socket, { itemName: e.target.value }, "#item-code");
     });
     // NOTE Payment !!!
     getElement("#payment").addEventListener("change", (e) => {
-      if (isOpen(socket)) {
-        socket.send(JSON.stringify({ payment: e.target.value }));
-        return;
-      }
+      return sendRequest(socket, { payment: e.target.value });
     });
     getElement(".payment-all").addEventListener("click", (e) => {
-      console.log(e.target.value);
-      if (isOpen(socket)) {
-        socket.send(JSON.stringify({ payment: e.target.value }));
-        return;
-      }
+      return sendRequest(socket, { payment: e.target.value });
     });
-
     // NOTE Suppliers !!!
     getElement("#suppliers").addEventListener("change", (e) => {
-      if (isOpen(socket)) {
-        socket.send(JSON.stringify({ supplier: e.target.value }));
-        return;
-      }
+      return sendRequest(socket, { supplier: e.target.value });
     });
     getElement(".all-suppliers").addEventListener("click", (e) => {
-      if (isOpen(socket)) {
-        socket.send(JSON.stringify({ supplier: e.target.value }));
-        return;
-      }
+      return sendRequest(socket, { supplier: e.target.value });
     });
 
     // NOTE Submit form !!!
     const submitBtn = getElement(".send");
     submitBtn.addEventListener("click", (e) => {
       e.preventDefault();
-
       const formData = { type: "form" };
 
       formData.dateFrom = getElement("#date-from").value;
       formData.dateTo = getElement("#date-to").value;
 
       if (!formData.dateFrom || !formData.dateTo) {
-        showMessage("error", "Date fields are required !");
-        return;
+        return showMessage("error", "Date fields are required !");
       }
       if (!compareDate(formData.dateFrom, formData.dateTo)) {
-        showMessage("error", "Incorrect date values !");
-        return;
+        return showMessage("error", "Incorrect date values !");
       }
       if (isOpen(socket)) {
         socket.send(JSON.stringify(formData));
